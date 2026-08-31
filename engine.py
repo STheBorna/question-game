@@ -1,7 +1,7 @@
-ROUNDS = 5          # هر مسابقه چند راند
-TIME_LIMIT = 30     # مهلت هر جواب، به ثانیه
-POINTS = 10         # امتیاز جواب درست
-SPEED_BONUS = 3     # بونوس سریع‌ترین درست‌جواب
+ROUNDS = 5 
+TIME_LIMIT = 30  
+POINTS = 10     
+SPEED_BONUS = 3  
 
 class Question:
     def __init__(self, text, options, correct):
