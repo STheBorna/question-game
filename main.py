@@ -1,89 +1,72 @@
-class Game:
-    def __init__(self, questions):
-        self.__questions = questions
-        self.__scores = [0,0]
-        self.__correct_answers_count = [0,0]
-    @property
-    def Questions(self):
-        return self.__questions
-    def get_score(self,player):
-        return self.__scores[player]
-    def get_correct_answer_count(self,player):
-        return self.__correct_answers_count[player]
-    def check_answer(self, player, user_answer, correct_answer, points):
-        if user_answer == correct_answer:
-            self.__scores[player] += points
-            self.__correct_answers_count[player] += 1
-            return True
-        return False
-
-    def play_again(self,answer):
-        if answer in ["y","1"] :
-            return True
-        elif answer in ["n","2"]:
-            return False
-    
-    def add_question(self,new_questions):
-        pass
-
+from time import perf_counter
 from rich.console import Console
+from engine import Match, Question, ROUNDS, TIME_LIMIT
+
 console = Console()
 
+question1: Question = Question("What is the capital of Japan?", ["Tokyo", "Kyoto", "Osaka", "Seoul"], "A")
+question2: Question = Question("What is the output of len('salam')?", ["3", "4", "5", "Error"], "C")
+question3: Question = Question("What is the chemical symbol for gold?", ["Ag", "Au", "Fe", "Gd"], "B")
+
 questions = [
-    ("question1",["A) A","B) B","C) C","D) D"],"D",10),
-    ("question2",["A) A","B) B","C) C","D) D"],"D",20),
-    ("question3",["A) A","B) B","C) C","D) D"],"D",10),
-    ("question4",["A) A","B) B","C) C","D) D"],"D",10),
-    ("question5",["A) A","B) B","C) C","D) D"],"D",10),
+    question1,
+    question2,
+    question3
 ]
 
-played_once = False
-playing = True
-while playing:
-    game = Game(questions)
-    if not played_once:
-        console.print("Welcome to the game!",style="red on green")
-        play_menu_answer = console.input(f"[yellow on white]select an option![/yellow on white]\n[green]1_Start the game[/green]\n[red]2_Exit Game[/red]\n(1/2):")
-        played_once = True
-    else:
-        console.print("\nDo you want to play again?",style="red on yellow")
-        play_menu_answer = console.input(f"[yellow on white]select an option![/yellow on white]\n[green]1_Play Again[/green]\n[red]2_Exit Game[/red]\n(1/2):")
+def show_menu():
+    console.print("\n⚔  Quiz Battle  ⚔", style="bold cyan")
+    console.print("1) New Game", style="bold green")
+    console.print("2) Exit", style="bold red")
 
-    if not game.play_again(play_menu_answer):
-        console.print("goodbye!",style="red bold")
+def play_round(match: Match, round_number: int):
+    question = match.start_round()
+    console.print(f"\nQuestion {round_number} of {ROUNDS}:", style="bold cyan")
+    console.print(question.text, style="bold")
+
+    for letter, option in zip("ABCD", question.options):
+        console.print(f"  {letter}) {option}", style="bold")
+
+    for player in match.palyers:
+        start = perf_counter()
+        answer = input(f"{player} answer (A-D): ").strip().upper()
+        elapsed = perf_counter() - start
+        match.submit(player, answer, elapsed)
+
+        if elapsed > TIME_LIMIT:
+            console.print(f"{player}: Time is up!", style="bold red")
+        elif question.is_correct(answer):
+            console.print(f"{player}: Correct!", style="bold green")
+        else:
+            console.print(f"{player}: Wrong! Correct answer: {question.correct_text()}", style="bold red")
+
+    match.resolve_round()
+
+def play():
+    match = Match("Player 1", "Player 2", questions)
+
+    for round_number in range(1, min(ROUNDS, len(questions)) + 1):
+        play_round(match, round_number)
+
+    console.print("\nGame over!", style="bold yellow")
+    for player in match.palyers:
+        console.print(f"   {player}: {match.scores[player]} points", style="bold green")
+
+    winner = match.winner()
+    if winner is None:
+        console.print("   Result: Draw!", style="bold yellow")
+    else:
+        console.print(f"   Winner: {winner}", style="bold cyan")
+
+
+while True:
+    show_menu()
+    choice = input("Your choice (1 or 2): ").strip()
+
+    if choice in ("1", "۱"):
+        play()
+    elif choice in ("2", "۲"):
+        console.print("Goodbye!", style="bold cyan")
         break
-    
-    for question, options, correct_answer, points in game.Questions:
-        print(f"\n{question}")
-        for opt in options:
-            print(opt)
-        
-        user_answer1 = console.input(f"[red]player1: Enter your answer:[/red] ").strip().upper()
-        if game.check_answer(0,user_answer1, correct_answer, points):
-            console.print("player1. Your answer is correct!",style="green on black bold")
-        else:
-            console.print("player1. Your answer is not correct!\n",style="red on black bold")
-
-        user_answer2 = console.input(f"[red]player1: Enter your answer:[/red] ").strip().upper()
-        if game.check_answer(1,user_answer2, correct_answer, points):
-            console.print("player2. Your answer is correct!",style="green on black bold")
-        else:
-            console.print("player2. Your answer is not correct!\n",style="red on black bold")
-        
-    player1_score = game.get_score(0)
-    player2_score = game.get_score(1)
-    player1_correct = game.get_correct_answer_count(0)
-    player2_correct = game.get_correct_answer_count(1)
-
-    console.print("\n===== RESULTS =====", style="yellow bold")
-    console.print(f"Player 1 score: {player1_score}", style="blue")
-    console.print(f"Player 2 score: {player2_score}", style="magenta")
-    console.print(f"Player 1 correct answers: {player1_correct}", style="blue")
-    console.print(f"Player 2 correct answers: {player2_correct}", style="magenta")
-
-    if player1_score > player2_score:
-        console.print("\nPlayer 1 Wins!", style="green bold")
-    elif player2_score > player1_score:
-        console.print("\nPlayer 2 Wins!", style="green bold")
     else:
-        console.print("\nIt's a Draw!", style="yellow bold")
+        console.print("Please enter only 1 or 2.", style="bold yellow")

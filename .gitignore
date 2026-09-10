@@ -3,3 +3,4 @@ main2.py
 .vscode/
 main_tkinter.py
 r.diff
+__pycache__
