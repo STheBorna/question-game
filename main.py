@@ -63,9 +63,9 @@ while True:
     show_menu()
     choice = input("Your choice (1 or 2): ").strip()
 
-    if choice in ("1", "۱"):
+    if choice == "1":
         play()
-    elif choice in ("2", "۲"):
+    elif choice == "2":
         console.print("Goodbye!", style="bold cyan")
         break
     else:
